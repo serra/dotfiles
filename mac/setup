@@ -8,4 +8,14 @@ if ! command -v brew >/dev/null 2>&1; then
   exit 1
 fi
 
-brew install stow neovim tmux lazygit rstfmt
+brew install stow neovim tmux lazygit starship
+
+# rstfmt ships on PyPI, not Homebrew. pipx keeps it in an isolated venv and on PATH.
+# Pin PIPX_HOME to a space-free path — pipx's macOS default (~/Library/Application
+# Support/pipx) contains a space, which it warns is incompatible with some tooling.
+export PIPX_HOME="${PIPX_HOME:-$HOME/.local/pipx}"
+if command -v pipx >/dev/null 2>&1; then
+  pipx install rstfmt
+else
+  echo "mac/setup: pipx not found — install it with 'brew install pipx', then run 'pipx install rstfmt'." >&2
+fi

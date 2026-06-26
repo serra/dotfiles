@@ -4,4 +4,6 @@
 -- disable it here. Add other container trims (heavy Mason installs, etc) below.
 return {
   { "zbirenbaum/copilot.lua", enabled = false },
+  -- Catppuccin Frappé in the devcontainer (overrides the Macchiato default).
+  { "catppuccin/nvim", opts = { flavour = "frappe" } },
 }

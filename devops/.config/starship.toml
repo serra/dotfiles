@@ -1,0 +1,61 @@
+# Catppuccin Starship prompt, shared across every machine (stow package: devops).
+# The leading badge ([mac] / [devcontainer] / [PROD]) is chosen + coloured per
+# environment from $DOTFILES_ENV (exported in ~/.zshrc), so every shell tells you
+# where you are. No Nerd-Font glyphs are used, so it renders cleanly on a bare
+# prod box too. The badge carries the env signal; the rest stays a neutral
+# Catppuccin palette shared everywhere.
+
+add_newline = true
+palette = "catppuccin"
+
+format = """
+$custom\
+$directory\
+$git_branch\
+$git_status\
+$character"""
+
+[palettes.catppuccin]
+blue = "#89b4fa"
+green = "#a6e3a1"
+red = "#f38ba8"
+text = "#cdd6f4"
+subtext = "#a6adc8"
+base = "#1e1e2e"
+
+# ── Per-environment badge ─────────────────────────────────────────────────────
+# Each module shows only when $DOTFILES_ENV matches, with its own static accent.
+[custom.env_mac]
+when = '[ "$DOTFILES_ENV" = "mac" ]'
+command = "echo mac"
+format = "[ $output ](fg:base bg:blue bold) "
+shell = ["sh"]
+
+[custom.env_devcontainer]
+when = '[ "$DOTFILES_ENV" = "devcontainer" ]'
+command = "echo devcontainer"
+format = "[ $output ](fg:base bg:green bold) "
+shell = ["sh"]
+
+[custom.env_prod]
+when = '[ "$DOTFILES_ENV" = "prod" ]'
+command = "echo PROD"
+format = "[ $output ](fg:base bg:red bold) "
+shell = ["sh"]
+
+# ── Shared (env-neutral) prompt ───────────────────────────────────────────────
+[directory]
+style = "bold fg:blue"
+truncation_length = 3
+truncate_to_repo = true
+
+[git_branch]
+symbol = " "
+style = "fg:subtext"
+
+[git_status]
+style = "fg:red"
+
+[character]
+success_symbol = "[❯](fg:green)"
+error_symbol = "[❯](fg:red)"

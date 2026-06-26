@@ -1,13 +1,28 @@
 #!/usr/bin/env bash
 # Fallback binary-install hook for the devcontainer profile.
 #
-# Prefer baking neovim/tmux/lazygit/rstfmt into the image's Dockerfile: at
-# container *runtime* the egress firewall blocks apt mirrors and PyPI, so this
-# hook will usually fail to reach them. It exists only as a best-effort fallback
-# for environments where the network is still open.
+# Prefer baking the binaries (neovim/tmux/lazygit/rstfmt/starship) and the
+# catppuccin/tmux theme clone into the image's Dockerfile: at container *runtime*
+# the egress firewall blocks apt mirrors, PyPI, the starship installer and GitHub
+# clones, so this hook (and devops/setup) will usually fail to reach them. It
+# exists only as a best-effort fallback when the network is still open.
 set -euo pipefail
 
 if command -v apt-get >/dev/null 2>&1; then
   sudo apt-get update -y && sudo apt-get install -y neovim tmux || \
     echo "devcontainer/setup: apt install failed (expected if firewall is up) — bake binaries into the image instead." >&2
+fi
+
+# rstfmt ships on PyPI, not apt. Prefer pipx for an isolated venv on PATH; fall
+# back to pip. Either may fail once the egress firewall blocks PyPI at runtime.
+# Pin PIPX_HOME to a space-free path to dodge pipx's space-in-home warning.
+export PIPX_HOME="${PIPX_HOME:-$HOME/.local/pipx}"
+if command -v pipx >/dev/null 2>&1; then
+  pipx install rstfmt || \
+    echo "devcontainer/setup: pipx install rstfmt failed (expected if firewall is up) — bake it into the image instead." >&2
+elif command -v pip3 >/dev/null 2>&1; then
+  pip3 install --user rstfmt || \
+    echo "devcontainer/setup: pip install rstfmt failed (expected if firewall is up) — bake it into the image instead." >&2
+else
+  echo "devcontainer/setup: no pipx/pip3 found — bake rstfmt into the image instead." >&2
 fi

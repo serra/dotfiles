@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Shared runtime deps for the theming layer (stow package: devops):
+#   - starship         : the prompt, initialised by ~/.zshrc on every machine
+#   - catppuccin/tmux  : the status-bar theme, run from tmux.conf
+# Runs first in bootstrap (before the profile hook) and covers prod/linux, which
+# has no overlay setup of its own. Idempotent and guarded; both degrade
+# gracefully when absent (plain prompt / default tmux bar), so devops stays safe
+# to run anywhere.
+set -euo pipefail
+
+# ── starship ─────────────────────────────────────────────────────────────────
+# Skip if already present, or if Homebrew is available (the mac/setup hook
+# installs it via brew right after this). Otherwise portable-install it for
+# prod/linux (best-effort in containers, where the egress firewall may block it).
+if ! command -v starship >/dev/null 2>&1 && ! command -v brew >/dev/null 2>&1; then
+  mkdir -p "$HOME/.local/bin"
+  if command -v curl >/dev/null 2>&1; then
+    curl -sS https://starship.rs/install.sh | sh -s -- -y -b "$HOME/.local/bin" || \
+      echo "devops/setup: starship install failed — the prompt falls back gracefully; install it manually (https://starship.rs) or bake it into the image." >&2
+  else
+    echo "devops/setup: curl not found — install starship manually (https://starship.rs) to get the themed prompt." >&2
+  fi
+fi
+
+# ── catppuccin/tmux (manual install, pinned) ─────────────────────────────────
+# The plugin's own recommended method (TPM has name-conflict issues). Cloned to
+# the path tmux.conf runs. Best-effort behind a container firewall — bake it in.
+CATPPUCCIN_TMUX_TAG="v2.3.0"
+CATPPUCCIN_TMUX_DIR="$HOME/.config/tmux/plugins/catppuccin/tmux"
+if [ ! -e "$CATPPUCCIN_TMUX_DIR/catppuccin.tmux" ]; then
+  if command -v git >/dev/null 2>&1; then
+    mkdir -p "$(dirname "$CATPPUCCIN_TMUX_DIR")"
+    git clone -q -b "$CATPPUCCIN_TMUX_TAG" --depth 1 \
+      https://github.com/catppuccin/tmux.git "$CATPPUCCIN_TMUX_DIR" || \
+      echo "devops/setup: catppuccin/tmux clone failed — the status bar falls back to tmux defaults; clone it manually or bake it into the image." >&2
+  else
+    echo "devops/setup: git not found — install catppuccin/tmux manually for the themed status bar." >&2
+  fi
+fi
