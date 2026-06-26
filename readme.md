@@ -48,11 +48,11 @@ Then confirm the symlinks landed in `~/.config` and remove the `.bak` dirs.
 
 ## Packages
 
-| Package | Stowed on | Owns |
-|---|---|---|
-| `devops` | mac, linux, devcontainer | `tmux.conf`, all of `nvim/` — the portable base |
-| `mac` | mac only | `tmux/local.conf` (pbcopy), `nvim/.../mac.lua`, `setup` |
-| `devcontainer` | container only | `tmux/local.conf` (xclip), `nvim/.../container.lua`, `setup` |
+| Package        | Stowed on                | Owns                                                         |
+| -------------- | ------------------------ | ------------------------------------------------------------ |
+| `devops`       | mac, linux, devcontainer | `tmux.conf`, all of `nvim/` — the portable base              |
+| `mac`          | mac only                 | `tmux/local.conf` (pbcopy), `nvim/.../mac.lua`, `setup`      |
+| `devcontainer` | container only           | `tmux/local.conf` (xclip), `nvim/.../container.lua`, `setup` |
 
 `linux` has no package — `devops` alone covers it. Add one later if it diverges.
 
@@ -61,7 +61,7 @@ Then confirm the symlinks landed in `~/.config` and remove the `.bak` dirs.
 - **New portable config** → add it under `devops/.config/...`.
 - **Machine-specific tmux** → add lines to that package's
   `.config/tmux/local.conf` (the base ends with `source-file -q
-  ~/.config/tmux/local.conf`, so any overlay is picked up; absent overlay is a
+~/.config/tmux/local.conf`, so any overlay is picked up; absent overlay is a
   no-op).
 - **Machine-specific nvim** → drop a `lua/plugins/*.lua` in the overlay package;
   LazyVim auto-loads every plugin file, so no wiring is needed. Use a filename
@@ -74,11 +74,11 @@ After editing, re-run `bootstrap` (or `stow` the package) and restart the tool.
 ## Design in one paragraph
 
 One repo, multiple stow packages: every machine stows `devops` plus at most one
-mutually-exclusive overlay (`mac` *or* `devcontainer`; the Linux box stows only
+mutually-exclusive overlay (`mac` _or_ `devcontainer`; the Linux box stows only
 `devops`). `devops` must be safe and functional on any OS by itself — portability
 lives in **runtime guards inside the config** (executable checks, `source-file
 -q`, `if-shell`), not in requiring an overlay. Overlays are **thin and additive**:
-they only add files at *new* paths and never edit a file `devops` owns, because
+they only add files at _new_ paths and never edit a file `devops` owns, because
 stow symlinks files rather than merging them. Each package also carries an
 optional `setup` hook for the binaries its config needs, keeping the
 content-vs-provisioning split clean.
