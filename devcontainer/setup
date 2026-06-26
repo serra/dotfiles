@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Fallback binary-install hook for the devcontainer profile.
+#
+# Prefer baking neovim/tmux/lazygit/rstfmt into the image's Dockerfile: at
+# container *runtime* the egress firewall blocks apt mirrors and PyPI, so this
+# hook will usually fail to reach them. It exists only as a best-effort fallback
+# for environments where the network is still open.
+set -euo pipefail
+
+if command -v apt-get >/dev/null 2>&1; then
+  sudo apt-get update -y && sudo apt-get install -y neovim tmux || \
+    echo "devcontainer/setup: apt install failed (expected if firewall is up) — bake binaries into the image instead." >&2
+fi

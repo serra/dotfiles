@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Binary-install hook for the macOS profile. Idempotent: brew skips what's
+# already installed. Network is open on the mac, so installing here is fine.
+set -euo pipefail
+
+if ! command -v brew >/dev/null 2>&1; then
+  echo "mac/setup: Homebrew not found — install it from https://brew.sh, then re-run." >&2
+  exit 1
+fi
+
+brew install stow neovim tmux lazygit rstfmt
