@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+DOTFILES="$(cd "$(dirname "$0")/.." && pwd)"
+
+# 1. Detect environment (override with: bootstrap <profile>)
+profile="${1:-}"
+if [ -z "$profile" ]; then
+  if [ "$(uname)" = "Darwin" ]; then profile=mac
+  elif [ -n "${BUILD_ENV:-}" ] || [ -f /.dockerenv ]; then profile=devcontainer
+  else profile=linux
+  fi
+fi
+
+# 2. Stow base + overlay. --no-folding keeps overlay layering predictable.
+#    --ignore='^setup$' keeps each package's setup hook out of $HOME: it's run
+#    in step 3, not symlinked (otherwise devops/setup and <profile>/setup both
+#    target ~/setup and stow aborts on the conflict).
+packages=(devops)
+[ "$profile" != "linux" ] && packages+=("$profile")
+stow --no-folding --ignore='^setup$' -d "$DOTFILES" -t "$HOME" "${packages[@]}"
+
+# 3. Run each package's optional binary-install hook (idempotent).
+for pkg in "${packages[@]}"; do
+  [ -x "$DOTFILES/$pkg/setup" ] && "$DOTFILES/$pkg/setup"
+done
+
+echo "dotfiles: stowed [${packages[*]}] for profile '$profile'"
