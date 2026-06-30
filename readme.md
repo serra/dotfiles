@@ -56,7 +56,7 @@ Then confirm the symlinks landed in `~/.config` and remove the `.bak` dirs.
 
 | Package        | Stowed on                | Owns                                                                       |
 | -------------- | ------------------------ | -------------------------------------------------------------------------- |
-| `devops`       | mac, linux, devcontainer | `.zshrc`, `tmux.conf`, all of `nvim/`, `starship.toml`, `setup` — the base |
+| `devops`       | mac, linux, devcontainer | `.zshrc`, `tmux.conf`, all of `nvim/`, `starship.toml`, `git/`, `setup` — the base |
 | `mac`          | mac only                 | `zsh/local.zsh`, `tmux/local.conf` (pbcopy), `nvim/.../mac.lua`, `setup`   |
 | `devcontainer` | container only           | `tmux/local.conf` (xclip), `nvim/.../container.lua`, `setup`               |
 
