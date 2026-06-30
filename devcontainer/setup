@@ -8,16 +8,24 @@
 # exists only as a best-effort fallback when the network is still open.
 set -euo pipefail
 
-if command -v apt-get >/dev/null 2>&1; then
-  sudo apt-get update -y && sudo apt-get install -y neovim tmux || \
-    echo "devcontainer/setup: apt install failed (expected if firewall is up) — bake binaries into the image instead." >&2
+# Only fetch what the image hasn't already baked in. When neovim/tmux are baked
+# (django_vines devcontainer), this whole block is a no-op — otherwise it would
+# pull apt's neovim 0.7, too old for LazyVim, and shadowing aside, waste space.
+missing=()
+command -v nvim >/dev/null 2>&1 || missing+=(neovim)
+command -v tmux >/dev/null 2>&1 || missing+=(tmux)
+if [ ${#missing[@]} -gt 0 ] && command -v apt-get >/dev/null 2>&1; then
+  sudo apt-get update -y && sudo apt-get install -y "${missing[@]}" || \
+    echo "devcontainer/setup: apt install ${missing[*]} failed (expected if firewall is up) — bake into the image instead." >&2
 fi
 
 # rstfmt ships on PyPI, not apt. Prefer pipx for an isolated venv on PATH; fall
 # back to pip. Either may fail once the egress firewall blocks PyPI at runtime.
 # Pin PIPX_HOME to a space-free path to dodge pipx's space-in-home warning.
 export PIPX_HOME="${PIPX_HOME:-$HOME/.local/pipx}"
-if command -v pipx >/dev/null 2>&1; then
+if command -v rstfmt >/dev/null 2>&1; then
+  : # already baked into the image — nothing to do.
+elif command -v pipx >/dev/null 2>&1; then
   pipx install rstfmt || \
     echo "devcontainer/setup: pipx install rstfmt failed (expected if firewall is up) — bake it into the image instead." >&2
 elif command -v pip3 >/dev/null 2>&1; then
@@ -25,4 +33,14 @@ elif command -v pip3 >/dev/null 2>&1; then
     echo "devcontainer/setup: pip install rstfmt failed (expected if firewall is up) — bake it into the image instead." >&2
 else
   echo "devcontainer/setup: no pipx/pip3 found — bake rstfmt into the image instead." >&2
+fi
+
+# Make zsh the login shell so terminals (and tmux panes) start with the themed
+# .zshrc + starship prompt. Guarded: only when zsh is installed and not already
+# the shell. The devcontainer-specific env (DATABASE_URL via /entrypoint) is set
+# in .config/zsh/local.zsh, sourced by devops/.zshrc.
+zsh_bin="$(command -v zsh || true)"
+if [ -n "$zsh_bin" ] && [ "${SHELL:-}" != "$zsh_bin" ] && command -v sudo >/dev/null 2>&1; then
+  sudo chsh -s "$zsh_bin" "$(id -un)" || \
+    echo "devcontainer/setup: chsh to zsh failed — run 'chsh -s $zsh_bin' manually." >&2
 fi
